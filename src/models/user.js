@@ -1,22 +1,92 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  name: String,
-  email: { type: String, unique: true },
-  passwordHash: String,
-
-  wallet: {
-    available: { type: Number, default: 0 },
-    locked: { type: Number, default: 0 }
+  name: { 
+    type: String, 
+    required: true,
+    trim: true 
   },
-
+  email: { 
+    type: String, 
+    required: true, 
+    unique: true, 
+    lowercase: true,
+    trim: true 
+  },
+  passwordHash: { 
+    type: String, 
+    required: true 
+  },
+  phone: { 
+    type: String,
+    trim: true 
+  },
+  avatar: { 
+    type: String, 
+    default: '' 
+  }, // URL to profile picture
+  favoriteTeam: { 
+    type: String, 
+    default: '' 
+  },
   kycStatus: {
     type: String,
-    enum: ["pending","verified","rejected"],
-    default: "pending"
+    enum: ['pending', 'verified', 'rejected'],
+    default: 'pending'
   },
-
-  createdAt: { type: Date, default: Date.now }
+  wallet: {
+    available: { 
+      type: Number, 
+      default: 0, 
+      min: 0 
+    },
+    locked: { 
+      type: Number, 
+      default: 0, 
+      min: 0 
+    }
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin', 'support'],
+    default: 'user'
+  },
+  refreshToken: { 
+    type: String 
+  },
+  // Profile statistics (updated via background jobs after each settlement)
+  stats: {
+    totalBets: { type: Number, default: 0 },
+    wins: { type: Number, default: 0 },
+    winStreak: { type: Number, default: 0 },
+    profit: { type: Number, default: 0 },      // net profit (positive only shown in UI)
+    winRate: { type: Number, default: 0 },      // computed as wins/totalBets * 100
+    updatedAt: Date
+  },
+  // Badges earned by the user (references to Badge model)
+  badges: [{
+    badgeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Badge' },
+    earnedAt: { type: Date, default: Date.now }
+  }],
+  createdAt: { 
+    type: Date, 
+    default: Date.now 
+  },
+  updatedAt: { 
+    type: Date, 
+    default: Date.now 
+  }
 });
 
-module.exports = mongoose.model("User", userSchema);
+// Update timestamps on save
+userSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
+// Index for leaderboard queries
+userSchema.index({ 'stats.profit': -1 });
+userSchema.index({ 'stats.wins': -1 });
+userSchema.index({ 'stats.winStreak': -1 });
+
+module.exports = mongoose.models.User || mongoose.model('User', userSchema);

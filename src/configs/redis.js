@@ -7,6 +7,13 @@ const redis = new Redis(env.REDIS_URL, {
 });
 
 redis.on('connect', () => console.log('✅ Redis connected'));
-redis.on('error', (err) => console.error('❌ Redis error:', err));
+let errorCount = 0;
+redis.on('error', (err) => {
+  if (errorCount === 0) {
+    console.error('❌ Redis unavailable (suppressing further errors):', err.message);
+  }
+  errorCount++;
+  if (errorCount > 3) return; // Silent after 3
+});
 
 module.exports = redis;

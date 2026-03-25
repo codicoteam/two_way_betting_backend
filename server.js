@@ -25,15 +25,23 @@ if (swaggerSpecs) {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 }
 
-// Start jobs
-require('./src/jobs/matchUpdateJob');
-require('./src/jobs/settlementJob');
-require('./src/jobs/badgeJob');
-require('./src/jobs/leaderboardJob');
-require('./src/jobs/notificationJob');
-require('./src/jobs/expiryJob');
-require('./src/jobs/cleanupJob');
-require('./src/jobs/queue');
+// Start jobs (async graceful)
+const startJobs = async () => {
+  try {
+    const { initQueues } = require('./src/jobs/queue');
+    await initQueues(); // Will log warn if no Redis
+    require('./src/jobs/matchUpdateJob');
+    require('./src/jobs/settlementJob');
+    require('./src/jobs/badgeJob');
+    require('./src/jobs/leaderboardJob');
+    require('./src/jobs/notificationJob');
+    require('./src/jobs/expiryJob');
+    require('./src/jobs/cleanupJob');
+  } catch (err) {
+    console.warn('⚠️ Jobs disabled:', err.message);
+  }
+};
+startJobs();
 
 // Socket init (if needed)
 try {
@@ -44,5 +52,10 @@ try {
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
+
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🌐 API Documentation (Swagger): http://localhost:${PORT}/api-docs`);
+  console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
+
   logger.info(`Server running on port ${PORT}`);
 });

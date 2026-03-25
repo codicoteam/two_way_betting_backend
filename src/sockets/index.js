@@ -51,6 +51,5 @@ exports.init = (server) => {
 };
 
 exports.getIO = () => {
-  if (!io) throw new Error('Socket.io not initialized');
-  return io;
+  return io || null; // Safe return, null if not ready
 };

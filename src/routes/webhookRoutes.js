@@ -3,10 +3,36 @@ const { paynowWebhook, genericWebhook } = require('../controllers/webhookControl
 
 const router = express.Router();
 
-// Paynow sends POST to this endpoint
+/**
+ * @swagger
+ * /api/webhooks/paynow:
+ *   post:
+ *     summary: Paynow payment confirmation webhook
+ *     tags: [Webhooks]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *     responses:
+ *       200:
+ *         description: Webhook processed
+ */
 router.post('/paynow', paynowWebhook);
 
-// Generic webhook receiver (if needed)
+/**
+ * @swagger
+ * /api/webhooks:
+ *   post:
+ *     summary: Generic webhook handler
+ *     tags: [Webhooks]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *     responses:
+ *       200:
+ *         description: Webhook processed
+ */
 router.post('/', genericWebhook);
 
 module.exports = router;

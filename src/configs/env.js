@@ -8,7 +8,7 @@ const envSchema = Joi.object({
   USE_MEMORY_DB: Joi.boolean().default(false),
   PORT: Joi.number().default(5000),
   MONGODB_URI: Joi.string().when('USE_MEMORY_DB', { is: true, then: Joi.optional(), otherwise: Joi.required() }),
-  REDIS_URL: Joi.string().required(),
+  REDIS_URL: Joi.string().default('redis://localhost:6379'),
   JWT_SECRET: Joi.string().min(32).required(),
   JWT_REFRESH_SECRET: Joi.string().min(32).required(),
   JWT_EXPIRES_IN: Joi.string().default('15m'),

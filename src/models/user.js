@@ -61,7 +61,7 @@ const userSchema = new mongoose.Schema({
     winStreak: { type: Number, default: 0 },
     profit: { type: Number, default: 0 },      // net profit (positive only shown in UI)
     winRate: { type: Number, default: 0 },      // computed as wins/totalBets * 100
-    updatedAt: Date
+    updatedAt: { type: Date }
   },
   // Badges earned by the user (references to Badge model)
   badges: [{
@@ -79,9 +79,8 @@ const userSchema = new mongoose.Schema({
 });
 
 // Update timestamps on save
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function() {
   this.updatedAt = Date.now();
-  next();
 });
 
 // Index for leaderboard queries

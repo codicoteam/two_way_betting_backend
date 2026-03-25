@@ -13,7 +13,17 @@ const options = {
         url: 'http://localhost:5000',
         description: 'Local server'
       }
-    ]
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'JWT Authentication'
+        }
+      }
+    }
   },
   apis: ['./src/routes/*.js', './src/controllers/*.js']
 };

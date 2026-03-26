@@ -1,10 +1,14 @@
-const { notificationQueue } = require('./queue');
+const { getQueue } = require('./queue');
 const User = require('../models/user');
 const Match = require('../models/match');
 const notificationService = require('../services/notificationService');
 const logger = require('../utils/logger');
 
-notificationQueue.process(async (job) => {
+const notificationQueue = getQueue('notificationQueue');
+if (!notificationQueue) {
+  console.warn('⚠️ notificationQueue unavailable (jobs disabled)');
+} else {
+  notificationQueue.process(async (job) => {
   const { type, data } = job.data;
   try {
     if (type === 'match-reminder') {
@@ -47,3 +51,4 @@ notificationQueue.add(
   { type: 'match-reminder' },
   { repeat: { every: 15 * 60 * 1000 } }
 );
+}

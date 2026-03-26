@@ -1,10 +1,14 @@
 const matchService = require('../services/matchService');
 const Match = require('../models/match');
 const logger = require('../utils/logger');
-const { matchUpdateQueue } = require('./queue');
+const { getQueue } = require('./queue');
 
-// Process job: fetch latest match data for a specific match or all live matches
-matchUpdateQueue.process(async (job) => {
+const matchUpdateQueue = getQueue('matchUpdateQueue');
+if (!matchUpdateQueue) {
+  console.warn('⚠️ matchUpdateQueue unavailable (jobs disabled)');
+} else {
+  // Process job: fetch latest match data for a specific match or all live matches
+  matchUpdateQueue.process(async (job) => {
   const { matchId } = job.data;
   try {
     if (matchId) {
@@ -32,3 +36,4 @@ matchUpdateQueue.add(
   {},
   { repeat: { every: 60 * 1000 } } // every minute
 );
+}

@@ -1,8 +1,12 @@
-const { expiryQueue } = require('./queue');
+const { getQueue } = require('./queue');
 const Bet = require('../models/Bet');
 const logger = require('../utils/logger');
 
-expiryQueue.process(async () => {
+const expiryQueue = getQueue('expiryQueue');
+if (!expiryQueue) {
+  console.warn('⚠️ expiryQueue unavailable (jobs disabled)');
+} else {
+  expiryQueue.process(async () => {
   try {
     // Find pending early settlement requests older than 2 minutes
     const expiryTime = new Date(Date.now() - 2 * 60 * 1000);
@@ -27,3 +31,4 @@ expiryQueue.add(
   {},
   { repeat: { every: 60 * 1000 } }
 );
+}

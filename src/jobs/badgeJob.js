@@ -1,9 +1,13 @@
-const { badgeQueue } = require('./queue');
+const { getQueue } = require('./queue');
 const User = require('../models/user');
 const badgeService = require('../services/badgeService');
 const logger = require('../utils/logger');
 
-badgeQueue.process(async (job) => {
+const badgeQueue = getQueue('badgeQueue');
+if (!badgeQueue) {
+  console.warn('⚠️ badgeQueue unavailable (jobs disabled)');
+} else {
+  badgeQueue.process(async (job) => {
   const { userId } = job.data;
   try {
     if (userId) {
@@ -36,3 +40,4 @@ badgeQueue.add(
   {},
   { repeat: { cron: '0 2 * * *' } }
 );
+}

@@ -1,10 +1,14 @@
-const { cleanupQueue } = require('./queue');
+const { getQueue } = require('./queue');
 const MatchChat = require('../models/match-chat');
 const Notification = require('../models/notifications');
 const PrivateMessage = require('../models/private-message');
 const logger = require('../utils/logger');
 
-cleanupQueue.process(async () => {
+const cleanupQueue = getQueue('cleanupQueue');
+if (!cleanupQueue) {
+  console.warn('⚠️ cleanupQueue unavailable (jobs disabled)');
+} else {
+  cleanupQueue.process(async () => {
   try {
     // Delete match chat messages older than 24 hours
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -30,3 +34,4 @@ cleanupQueue.add(
   {},
   { repeat: { cron: '0 3 * * *' } }
 );
+}

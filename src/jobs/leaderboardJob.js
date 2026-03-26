@@ -1,8 +1,12 @@
-const { leaderboardQueue } = require('./queue');
+const { getQueue } = require('./queue');
 const leaderboardService = require('../services/leaderboardService');
 const logger = require('../utils/logger');
 
-leaderboardQueue.process(async () => {
+const leaderboardQueue = getQueue('leaderboardQueue');
+if (!leaderboardQueue) {
+  console.warn('⚠️ leaderboardQueue unavailable (jobs disabled)');
+} else {
+  leaderboardQueue.process(async () => {
   try {
     // Recalculate and cache leaderboards for different periods
     const periods = ['daily', 'weekly', 'monthly', 'all_time'];
@@ -23,3 +27,4 @@ leaderboardQueue.add(
   {},
   { repeat: { every: 60 * 60 * 1000 } }
 );
+}

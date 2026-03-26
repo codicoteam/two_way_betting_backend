@@ -6,7 +6,7 @@ let queues = null;
 
 const initQueues = async () => {
   if (queues) return queues;
-  
+
   try {
     await redisConfig.ping(); // Test connection
     queues = {
@@ -20,10 +20,15 @@ const initQueues = async () => {
     };
     console.log('✅ Bull queues initialized');
   } catch (err) {
-    console.warn('⚠️ Redis unavailable, queues disabled');
-    queues = {}; // Mock empty queues
+    console.warn('⚠️ Redis unavailable, queues disabled:', err.message);
+    queues = {}; // Keep server running with disabled queues
   }
   return queues;
 };
 
-module.exports = { initQueues };
+const getQueue = (name) => {
+  if (!queues) return null;
+  return queues[name] || null;
+};
+
+module.exports = { initQueues, getQueue };

@@ -1,10 +1,14 @@
-const { settlementQueue } = require('./queue');
+const { getQueue } = require('./queue');
 const Bet = require('../models/Bet');
 const matchService = require('../services/matchService');
 const settlementService = require('../services/settlementService');
 const logger = require('../utils/logger');
 
-settlementQueue.process(async (job) => {
+const settlementQueue = getQueue('settlementQueue');
+if (!settlementQueue) {
+  console.warn('⚠️ settlementQueue unavailable (jobs disabled)');
+} else {
+  settlementQueue.process(async (job) => {
   const { matchId } = job.data;
   try {
     // Get match result
@@ -33,3 +37,4 @@ settlementQueue.process(async (job) => {
     throw error;
   }
 });
+}

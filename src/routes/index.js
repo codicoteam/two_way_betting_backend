@@ -1,6 +1,7 @@
 const express = require('express');
 const authRoutes = require('./authRoutes');
 const userRoutes = require('./userRoutes');
+const preferencesRoutes = require('./preferencesRoutes');
 const walletRoutes = require('./walletRoutes');
 const betRoutes = require('./betRoutes');
 const matchRoutes = require('./matchRoutes');
@@ -18,6 +19,7 @@ const router = express.Router();
 
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
+router.use('/preferences', preferencesRoutes);
 router.use('/wallet', walletRoutes);
 router.use('/bets', betRoutes);
 router.use('/matches', matchRoutes);

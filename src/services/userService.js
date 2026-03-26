@@ -26,7 +26,7 @@ exports.getProfile = async (userId, requesterId) => {
  * Update user profile
  */
 exports.updateProfile = async (userId, updates) => {
-  const allowedFields = ['name', 'phone', 'avatar', 'favoriteTeam', 'bio'];
+  const allowedFields = ['name', 'phone', 'avatar', 'favoriteTeam', 'preferredSports', 'preferredLeagues'];
   const filtered = {};
   Object.keys(updates).forEach(key => {
     if (allowedFields.includes(key)) filtered[key] = updates[key];

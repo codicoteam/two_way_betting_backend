@@ -8,7 +8,7 @@ const logger = require('../utils/logger');
 /**
  * Register a new user
  */
-exports.register = async ({ name, email, password, phone }) => {
+exports.register = async ({ name, email, password, phone, preferredSports, preferredLeagues }) => {
   // Check if user exists
   const existingUser = await User.findOne({ email });
   if (existingUser) {
@@ -24,6 +24,8 @@ exports.register = async ({ name, email, password, phone }) => {
     email,
     passwordHash,
     phone,
+    preferredSports: preferredSports || [],
+    preferredLeagues: preferredLeagues || [],
     referralCode: generateReferralCode(),
   });
 

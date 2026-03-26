@@ -22,6 +22,9 @@ const router = express.Router();
  *               name: { type: string }
  *               email: { type: string }
  *               password: { type: string }
+ *               phone: { type: string }
+ *               preferredSports: { type: array, items: { type: string } }
+ *               preferredLeagues: { type: array, items: { type: string }, maxItems: 5 }
  *     responses:
  *       201:
  *         description: User registered successfully

@@ -29,6 +29,13 @@ const userSchema = new mongoose.Schema({
     type: String, 
     default: '' 
   },
+  preferredSports: [{
+    type: String,
+    enum: ['football', 'basketball', 'tennis', 'cricket', 'baseball', 'hockey', 'other']
+  }],
+  preferredLeagues: [{
+    type: String
+  }],
   kycStatus: {
     type: String,
     enum: ['pending', 'verified', 'rejected'],

@@ -30,6 +30,10 @@ const router = express.Router();
  *             properties:
  *               name: { type: string }
  *               avatar: { type: string }
+ *               phone: { type: string }
+ *               favoriteTeam: { type: string }
+ *               preferredSports: { type: array, items: { type: string } }
+ *               preferredLeagues: { type: array, items: { type: string }, maxItems: 5 }
  *     responses:
  *       200:
  *         description: Profile updated

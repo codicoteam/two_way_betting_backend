@@ -7,6 +7,8 @@ const registerSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
   phone: Joi.string().pattern(/^\+?[0-9]{10,15}$/).optional(),
+  preferredSports: Joi.array().items(Joi.string().valid('football', 'basketball', 'tennis', 'cricket', 'baseball', 'hockey', 'other')).optional(),
+  preferredLeagues: Joi.array().items(Joi.string()).max(5).optional(),
 });
 
 // Login
@@ -65,6 +67,8 @@ const updateProfileSchema = Joi.object({
   phone: Joi.string().pattern(/^\+?[0-9]{10,15}$/).optional(),
   favoriteTeam: Joi.string().optional(),
   avatar: Joi.string().uri().optional(),
+  preferredSports: Joi.array().items(Joi.string().valid('football', 'basketball', 'tennis', 'cricket', 'baseball', 'hockey', 'other')).optional(),
+  preferredLeagues: Joi.array().items(Joi.string()).max(5).optional(),
 });
 
 module.exports = {

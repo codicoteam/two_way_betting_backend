@@ -5,9 +5,8 @@ dotenv.config();
 
 const envSchema = Joi.object({
   NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
-  USE_MEMORY_DB: Joi.boolean().default(false),
   PORT: Joi.number().default(5000),
-  MONGODB_URI: Joi.string().when('USE_MEMORY_DB', { is: true, then: Joi.optional(), otherwise: Joi.required() }),
+  MONGODB_URI: Joi.string().required(),
   REDIS_URL: Joi.string().default('redis://localhost:6379'),
   JWT_SECRET: Joi.string().min(32).required(),
   JWT_REFRESH_SECRET: Joi.string().min(32).required(),

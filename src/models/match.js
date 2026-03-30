@@ -67,7 +67,7 @@ const matchSchema = new mongoose.Schema({
   }],
   apiProvider: { 
     type: String, 
-    enum: ['sportmonks', 'api-football', 'thesportsdb', 'opta'] 
+    enum: ['api-football', 'thesportsdb', 'opta'] 
   },
   apiResponse: mongoose.Schema.Types.Mixed, // Cached full API response
   cacheExpiry: Date, // For Redis integration

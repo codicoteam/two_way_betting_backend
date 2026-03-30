@@ -4,7 +4,8 @@ const User = require('../models/user');
 
 exports.getUpcomingMatches = async (req, res, next) => {
   try {
-    const matches = await Match.find({ status: 'NS' }).sort({ startTime: 1 });
+    const { leagueId, date } = req.query;
+    const matches = await matchService.fetchUpcomingMatches(leagueId, date);
 
     // If user is authenticated, personalize the order
     if (req.user) {
@@ -14,7 +15,7 @@ exports.getUpcomingMatches = async (req, res, next) => {
           const aPreferred = (user.preferredSports.includes(a.sport) || user.preferredLeagues.includes(a.leagueName)) ? 1 : 0;
           const bPreferred = (user.preferredSports.includes(b.sport) || user.preferredLeagues.includes(b.leagueName)) ? 1 : 0;
           if (aPreferred !== bPreferred) return bPreferred - aPreferred; // Preferred first
-          return a.startTime - b.startTime; // Then by time
+          return new Date(a.startTime) - new Date(b.startTime); // Then by time
         });
       }
     }

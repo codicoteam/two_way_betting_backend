@@ -19,7 +19,7 @@ const MARKET_TYPE = {
   NEXT_GOAL: 'next_goal',
 };
 
-// Match statuses (from Sportmonks)
+// Standard match statuses
 const MATCH_STATUS = {
   NOT_STARTED: 'NS',
   LIVE: 'LIVE',

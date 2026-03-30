@@ -4,11 +4,14 @@ const redis = require('../configs/redis');
 
 class ApiClient {
   constructor(baseURL, apiKey) {
-    this.client = axios.create({
+    const axiosOptions = {
       baseURL,
-      params: { api_token: apiKey },
       timeout: 10000,
-    });
+    };
+    if (apiKey) {
+      axiosOptions.params = { api_token: apiKey };
+    }
+    this.client = axios.create(axiosOptions);
 
     // Response interceptor for logging
     this.client.interceptors.response.use(
@@ -45,10 +48,9 @@ class ApiClient {
   }
 }
 
-// Create and export a configured instance
-const sportmonksClient = new ApiClient(
-  process.env.SPORTMONKS_BASE_URL || 'https://soccer.sportmonks.com/api/v2.0',
-  process.env.SPORTMONKS_API_KEY
-);
+// Create and export a configured instance for TheSportsDB
+const sportsdbBase = process.env.SPORTSDB_BASE_URL
+  || `https://www.thesportsdb.com/api/v1/json/${process.env.SPORTSDB_API_KEY || '1'}`;
+const sportsdbClient = new ApiClient(sportsdbBase);
 
-module.exports = { ApiClient, sportmonksClient };
+module.exports = { ApiClient, sportsdbClient };

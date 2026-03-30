@@ -32,6 +32,9 @@ const privateMessageSchema = new mongoose.Schema({
   }
 });
 
+// TTL index to auto-delete private messages after 60 days
+privateMessageSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 24 * 60 * 60 });
+
 // Index for fetching conversation history
 privateMessageSchema.index({ conversationId: 1, createdAt: -1 });
 

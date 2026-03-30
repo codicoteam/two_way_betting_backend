@@ -1,7 +1,6 @@
 // Bet statuses
 const BET_STATUS = {
   OPEN: 'OPEN',
-  MATCHED: 'MATCHED',
   LIVE: 'LIVE',
   COMPLETED: 'COMPLETED',
   CANCELLED: 'CANCELLED',
@@ -25,6 +24,7 @@ const MATCH_STATUS = {
   LIVE: 'LIVE',
   HALFTIME: 'HT',
   FULL_TIME: 'FT',
+  SETTLED: 'SETTLED',
   CANCELLED: 'CANC',
   POSTPONED: 'POSTP',
   ABANDONED: 'ABAN',
@@ -59,7 +59,6 @@ const TRANSACTION_TYPE = {
 // Notification types
 const NOTIFICATION_TYPE = {
   BET_CREATED: 'bet_created',
-  BET_MATCHED: 'bet_matched',
   BET_LIVE: 'bet_live',
   BET_SETTLED: 'bet_settled',
   BET_CANCELLED: 'bet_cancelled',

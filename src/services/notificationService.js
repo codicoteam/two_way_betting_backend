@@ -1,5 +1,4 @@
 const Notification = require('../models/notifications');
-const { getIO } = require('../sockets');
 
 /**
  * Create a notification and emit via socket if user connected
@@ -14,6 +13,7 @@ exports.create = async ({ userId, type, title, message, data = {} }) => {
   });
 
   // Emit via socket if available
+  const { getIO } = require('../sockets');
   const io = getIO();
   if (io) {
     io.to(`user:${userId}`).emit('notification', notification);

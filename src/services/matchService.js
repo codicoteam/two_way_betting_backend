@@ -91,21 +91,21 @@ exports.updateMatch = async (matchId, apiData) => {
 
   await Match.findOneAndUpdate({ matchId }, update);
 
-  // Notify matched bettors when match transitions into LIVE
+  // Notify live bettors when match transitions into LIVE
   if (prevStatus !== 'LIVE' && newStatus === 'LIVE') {
     try {
-      const matchedBets = await Bet.find({
+      const liveBets = await Bet.find({
         matchId,
-        status: { $in: ['MATCHED', 'LIVE'] },
+        status: 'LIVE',
       });
 
-      if (matchedBets.length > 0) {
+      if (liveBets.length > 0) {
         await Bet.updateMany(
-          { matchId, status: { $in: ['MATCHED', 'LIVE'] } },
+          { matchId, status: 'LIVE' },
           { status: 'LIVE', startedAt: new Date() }
         );
 
-        for (const bet of matchedBets) {
+        for (const bet of liveBets) {
           const message = `Match started: ${prevMatch.homeTeam.name} vs ${prevMatch.awayTeam.name}. Your bet is now LIVE.`;
 
           if (bet.createdBy) {
@@ -129,70 +129,7 @@ exports.updateMatch = async (matchId, apiData) => {
           }
         }
 
-        logger.info(`Notified ${matchedBets.length} matched bets for match ${matchId} live start.`);
-      }
-    } catch (err) {
-      logger.error('Failed to notify bettors on match start:', err);
-    }
-  }
-};
-
-/**
- * Update match status and scores (called by background job)
- */
-exports.updateMatch = async (matchId, apiData) => {
-  const prevMatch = await Match.findOne({ matchId });
-  const prevStatus = prevMatch?.status;
-  const newStatus = apiData.time?.status;
-
-  const update = {
-    status: newStatus,
-    'scores.home': apiData.scores?.localteam_score,
-    'scores.away': apiData.scores?.visitorteam_score,
-    lastFetched: new Date(),
-  };
-
-  await Match.findOneAndUpdate({ matchId }, update);
-
-  // Notify matched bettors when match transitions into LIVE
-  if (prevStatus !== 'LIVE' && newStatus === 'LIVE') {
-    try {
-      const matchedBets = await Bet.find({
-        matchId,
-        status: { $in: ['MATCHED', 'LIVE'] },
-      });
-
-      if (matchedBets.length > 0) {
-        await Bet.updateMany(
-          { matchId, status: { $in: ['MATCHED', 'LIVE'] } },
-          { status: 'LIVE', startedAt: new Date() }
-        );
-
-        for (const bet of matchedBets) {
-          const message = `Match started: ${prevMatch.homeTeam.name} vs ${prevMatch.awayTeam.name}. Your bet is now LIVE.`;
-
-          if (bet.createdBy) {
-            await notificationService.create({
-              userId: bet.createdBy,
-              type: NOTIFICATION_TYPE.BET_LIVE,
-              title: 'Bet Live',
-              message,
-              data: { matchId, betId: bet._id.toString() },
-            });
-          }
-
-          if (bet.acceptedBy && bet.acceptedBy.toString() !== bet.createdBy?.toString()) {
-            await notificationService.create({
-              userId: bet.acceptedBy,
-              type: NOTIFICATION_TYPE.BET_LIVE,
-              title: 'Bet Live',
-              message,
-              data: { matchId, betId: bet._id.toString() },
-            });
-          }
-        }
-
-        logger.info(`Notified ${matchedBets.length} matched bets for match ${matchId} live start.`);
+        logger.info(`Notified ${liveBets.length} live bets for match ${matchId} live start.`);
       }
     } catch (err) {
       logger.error('Failed to notify bettors on match start:', err);

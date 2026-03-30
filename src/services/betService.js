@@ -13,7 +13,7 @@ const matchBet = async (bet, backerId) => {
   bet.acceptedBy = backerId;
   bet.backerStake = backerStake;
   bet.totalPot = bet.creatorStake + backerStake;
-  bet.status = BET_STATUS.MATCHED;
+  bet.status = BET_STATUS.LIVE;
   bet.matchedAt = new Date();
   bet.acceptRequests = [];
   await bet.save();
@@ -31,9 +31,9 @@ const matchBet = async (bet, backerId) => {
   });
   await notificationService.create({
     userId: backerId,
-    type: NOTIFICATION_TYPE.BET_MATCHED,
-    title: 'Bet Matched',
-    message: `You were selected to match the bet. Your stake: $${backerStake}.`,
+    type: NOTIFICATION_TYPE.BET_LIVE,
+    title: 'Bet Live',
+    message: `You were selected to join the bet. Your stake: $${backerStake}.`,
     data: { betId: bet._id }
   });
 
@@ -91,10 +91,10 @@ exports.acceptBet = async (betId, userId) => {
 
   bet.acceptRequests.push({ user: userId, requestedAt: new Date() });
 
-  // If only one request, first come first serve -> match immediately
+  // If only one request, first come first serve -> accept immediately
   if (bet.acceptRequests.length === 1) {
-    const matchedBet = await matchBet(bet, userId);
-    return matchedBet;
+    const acceptedBet = await matchBet(bet, userId);
+    return acceptedBet;
   }
 
   await bet.save();
@@ -133,8 +133,8 @@ exports.chooseOpponent = async (betId, userId, backerId) => {
   const request = bet.acceptRequests.find((r) => r.user.toString() === backerId.toString());
   if (!request) throw new Error('This user did not request to accept this bet');
 
-  const matchedBet = await matchBet(bet, backerId);
-  return matchedBet;
+  const acceptedBet = await matchBet(bet, backerId);
+  return acceptedBet;
 };
 
 
@@ -144,7 +144,7 @@ exports.chooseOpponent = async (betId, userId, backerId) => {
 exports.requestEarlySettlement = async (betId, userId, proposedAmount) => {
   const bet = await Bet.findById(betId);
   if (!bet) throw new Error('Bet not found');
-  if (bet.status !== BET_STATUS.MATCHED && bet.status !== BET_STATUS.LIVE) {
+  if (bet.status !== BET_STATUS.LIVE) {
     throw new Error('Bet cannot be settled early at this stage');
   }
   if (bet.createdBy.toString() !== userId.toString() && bet.acceptedBy?.toString() !== userId.toString()) {

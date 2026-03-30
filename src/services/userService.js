@@ -2,13 +2,6 @@ const User = require('../models/user');
 const Bet = require('../models/Bet');
 const { winRate } = require('../utils/formatters');
 
-function computeTrustScore(stats = {}) {
-  const winRateValue = stats.winRate || 0;
-  const streak = Math.min(stats.winStreak || 0, 10);
-  const experienceScore = Math.min(10, (stats.totalBets || 0) / 5);
-  return Math.min(100, Math.round(winRateValue * 0.7 + streak * 3 + experienceScore));
-}
-
 function fanBadgeProgress(stats = {}) {
   const streak = stats.winStreak || 0;
   const progress = Math.min(100, Math.round((streak / 10) * 100));
@@ -33,7 +26,6 @@ exports.getProfile = async (userId, requesterId) => {
   if (!user) throw new Error('User not found');
 
   const profile = user.toObject();
-  profile.trustScore = computeTrustScore(user.stats);
   profile.fanBadge = fanBadgeProgress(user.stats);
 
   // If requesting own profile, include wallet and KYC status
@@ -41,7 +33,6 @@ exports.getProfile = async (userId, requesterId) => {
     const fullUser = await User.findById(userId)
       .select('-passwordHash -refreshToken');
     const fullProfile = fullUser.toObject();
-    fullProfile.trustScore = computeTrustScore(fullUser.stats);
     fullProfile.fanBadge = fanBadgeProgress(fullUser.stats);
     return fullProfile;
   }
@@ -64,7 +55,6 @@ exports.getSecurityInfo = async (userId) => {
     wins: user.stats.wins,
     winStreak: user.stats.winStreak,
     winRate: user.stats.winRate,
-    trustScore: computeTrustScore(user.stats),
     fanBadge: fanBadgeProgress(user.stats),
     accountCreatedAt: user.createdAt,
     accountUpdatedAt: user.updatedAt,

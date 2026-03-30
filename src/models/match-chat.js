@@ -23,7 +23,7 @@ const matchChatSchema = new mongoose.Schema({
   }
 });
 
-// TTL index to auto-delete old messages after 24 hours (optional)
-matchChatSchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });
+// TTL index to auto-delete old messages after 60 days
+matchChatSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 24 * 60 * 60 });
 
 module.exports = mongoose.models.MatchChat || mongoose.model('MatchChat', matchChatSchema);

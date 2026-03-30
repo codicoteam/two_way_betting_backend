@@ -1,5 +1,4 @@
 const MatchChat = require('../models/match-chat');
-const { getIO } = require('../sockets');
 
 /**
  * Post a message to a match chat
@@ -15,6 +14,7 @@ exports.postMessage = async ({ matchId, userId, message }) => {
   const populated = await chatMessage.populate('userId', 'name avatar');
 
   // Emit via socket to all users in that match room
+  const { getIO } = require('../sockets');
   const io = getIO();
   if (io) {
     io.to(`match:${matchId}`).emit('chatMessage', populated);

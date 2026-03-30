@@ -39,6 +39,7 @@ const matchSchema = new mongoose.Schema({
       'LIVE', 
       'HT',    // Halftime
       'FT',    // Full Time
+      'SETTLED', // Settled after bets are processed
       'CANC',  // Cancelled
       'POSTP', // Postponed
       'ABAN',  // Abandoned

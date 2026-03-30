@@ -1,5 +1,4 @@
 const PrivateMessage = require('../models/private-message');
-const { getIO } = require('../sockets');
 
 /**
  * Send a private message
@@ -18,6 +17,7 @@ exports.sendMessage = async ({ fromUserId, toUserId, message }) => {
   const populated = await msg.populate('fromUserId', 'name avatar');
 
   // Emit via socket to recipient
+  const { getIO } = require('../sockets');
   const io = getIO();
   if (io) {
     io.to(`user:${toUserId}`).emit('privateMessage', populated);

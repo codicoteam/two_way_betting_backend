@@ -97,7 +97,7 @@ async function settleBet(bet, matchResult) {
 async function settleMatchBets(matchId, matchResult) {
   const bets = await Bet.find({
     matchId,
-    status: { $in: [BET_STATUS.MATCHED, BET_STATUS.LIVE] },
+    status: BET_STATUS.LIVE,
   });
 
   for (const bet of bets) {

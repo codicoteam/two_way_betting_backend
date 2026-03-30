@@ -11,7 +11,6 @@ const notificationSchema = new mongoose.Schema({
     type: String,
     enum: [
       'bet_created',
-      'bet_matched',
       'bet_live',
       'bet_settled',
       'bet_cancelled',

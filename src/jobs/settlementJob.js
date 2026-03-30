@@ -24,14 +24,15 @@ if (!settlementQueue) {
     // Find all unsettled bets for this match
     const bets = await Bet.find({
       matchId,
-      status: { $in: ['MATCHED', 'LIVE'] },
+      status: 'LIVE',
     });
 
     for (const bet of bets) {
       await settlementService.settleBet(bet, matchResult);
     }
 
-    logger.info(`Settled ${bets.length} bets for match ${matchId}`);
+    await Match.findOneAndUpdate({ matchId }, { status: 'SETTLED' });
+    logger.info(`Settled ${bets.length} bets and marked match ${matchId} as SETTLED`);
   } catch (error) {
     logger.error('Settlement job failed:', error);
     throw error;

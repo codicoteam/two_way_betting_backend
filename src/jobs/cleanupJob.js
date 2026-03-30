@@ -10,9 +10,9 @@ if (!cleanupQueue) {
 } else {
   cleanupQueue.process(async () => {
   try {
-    // Delete match chat messages older than 24 hours
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const chatDeleted = await MatchChat.deleteMany({ createdAt: { $lt: oneDayAgo } });
+    // Delete match chat messages older than 60 days
+    const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+    const chatDeleted = await MatchChat.deleteMany({ createdAt: { $lt: sixtyDaysAgo } });
     logger.info(`Deleted ${chatDeleted.deletedCount} old chat messages`);
 
     // Delete notifications older than 30 days (TTL index also handles this)
@@ -20,8 +20,8 @@ if (!cleanupQueue) {
     const notifDeleted = await Notification.deleteMany({ createdAt: { $lt: thirtyDaysAgo } });
     logger.info(`Deleted ${notifDeleted.deletedCount} old notifications`);
 
-    // Delete old private messages (optional, keep last 30 days)
-    const privateDeleted = await PrivateMessage.deleteMany({ createdAt: { $lt: thirtyDaysAgo } });
+    // Delete old private messages older than 60 days
+    const privateDeleted = await PrivateMessage.deleteMany({ createdAt: { $lt: sixtyDaysAgo } });
     logger.info(`Deleted ${privateDeleted.deletedCount} old private messages`);
   } catch (error) {
     logger.error('Cleanup job failed:', error);

@@ -1,4 +1,5 @@
 const badgeService = require('../services/badgeService');
+const User = require('../models/user');
 
 exports.getAllBadges = async (req, res, next) => {
   try {

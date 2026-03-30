@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { SUPPORTED_SPORTS } = require('../utils/constants');
 
 const matchSchema = new mongoose.Schema({
   matchId: { 
@@ -8,8 +9,9 @@ const matchSchema = new mongoose.Schema({
     index: true 
   },
   sport: { 
-    type: String, 
-    default: 'football' 
+    type: String,
+    enum: SUPPORTED_SPORTS,
+    default: 'football',
   },
   leagueId: String,
   leagueName: String,

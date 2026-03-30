@@ -31,6 +31,19 @@ const MATCH_STATUS = {
   SUSPENDED: 'SUSP',
 };
 
+const SUPPORTED_SPORTS = [
+  'football',
+  'basketball',
+  'cricket',
+  'tennis',
+  'horse_racing',
+  'rugby',
+  'esports',
+  'boxing',
+  'american_football',
+  'hockey',
+];
+
 // Transaction types
 const TRANSACTION_TYPE = {
   DEPOSIT: 'deposit',
@@ -90,6 +103,7 @@ module.exports = {
   BET_STATUS,
   MARKET_TYPE,
   MATCH_STATUS,
+  SUPPORTED_SPORTS,
   TRANSACTION_TYPE,
   NOTIFICATION_TYPE,
   USER_ROLE,

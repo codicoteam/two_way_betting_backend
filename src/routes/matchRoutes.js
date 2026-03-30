@@ -3,6 +3,7 @@ const {
   getUpcomingMatches,
   getLiveMatches,
   getMatchById,
+  getMatchOverview,
   refreshMatches,
 } = require('../controllers/matchController');
 const { protect, optional } = require('../middlewares/authMiddleware');
@@ -33,6 +34,25 @@ router.get('/upcoming', optional, getUpcomingMatches);
  *         description: List of live matches
  */
 router.get('/live', optional, getLiveMatches);
+
+/**
+ * @swagger
+ * /api/matches/{id}/overview:
+ *   get:
+ *     summary: Get detailed match overview with chat and stakes
+ *     tags: [Matches]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Match detail including chat and stakes
+ */
+router.get('/:id/overview', optional, getMatchOverview);
 
 /**
  * @swagger

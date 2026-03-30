@@ -4,6 +4,7 @@ const {
   acceptBet,
   getBets,
   getBetById,
+  getMatchBets,
   requestEarlySettlement,
   respondEarlySettlement,
   getAcceptRequests,
@@ -60,6 +61,25 @@ const router = express.Router();
  */
 router.post('/', protect, createBetLimiter, validateCreateBet, createBet);
 router.get('/', protect, getBets);
+
+/**
+ * @swagger
+ * /api/bets/match/{matchId}:
+ *   get:
+ *     summary: Get bets for a match
+ *     tags: [Bets]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: matchId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: List of bets for the supplied match
+ */
+router.get('/match/:matchId', protect, getMatchBets);
 
 /**
  * @swagger

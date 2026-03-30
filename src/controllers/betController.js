@@ -57,6 +57,22 @@ exports.getBets = async (req, res, next) => {
   }
 };
 
+exports.getMatchBets = async (req, res, next) => {
+  try {
+    const { matchId } = req.params;
+    const { status } = req.query;
+    const filter = { matchId };
+    if (status) filter.status = status;
+    const bets = await Bet.find(filter)
+      .populate('createdBy', 'name avatar')
+      .populate('acceptedBy', 'name avatar')
+      .sort({ createdAt: -1 });
+    res.json({ success: true, data: bets });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getBetById = async (req, res, next) => {
   try {
     const bet = await Bet.findById(req.params.id)

@@ -2,6 +2,26 @@ const User = require('../models/user');
 const Bet = require('../models/Bet');
 const { winRate } = require('../utils/formatters');
 
+function computeTrustScore(stats = {}) {
+  const winRateValue = stats.winRate || 0;
+  const streak = Math.min(stats.winStreak || 0, 10);
+  const experienceScore = Math.min(10, (stats.totalBets || 0) / 5);
+  return Math.min(100, Math.round(winRateValue * 0.7 + streak * 3 + experienceScore));
+}
+
+function fanBadgeProgress(stats = {}) {
+  const streak = stats.winStreak || 0;
+  const progress = Math.min(100, Math.round((streak / 10) * 100));
+  return {
+    name: 'Fan Badge',
+    description: 'Earned after a 10-game winning streak while betting for your team',
+    earned: streak >= 10,
+    consecutiveWins: streak,
+    requiredWins: 10,
+    progress,
+  };
+}
+
 /**
  * Get user profile by ID or username
  */
@@ -12,14 +32,47 @@ exports.getProfile = async (userId, requesterId) => {
 
   if (!user) throw new Error('User not found');
 
+  const profile = user.toObject();
+  profile.trustScore = computeTrustScore(user.stats);
+  profile.fanBadge = fanBadgeProgress(user.stats);
+
   // If requesting own profile, include wallet and KYC status
   if (requesterId && requesterId.toString() === userId.toString()) {
     const fullUser = await User.findById(userId)
       .select('-passwordHash -refreshToken');
-    return fullUser;
+    const fullProfile = fullUser.toObject();
+    fullProfile.trustScore = computeTrustScore(fullUser.stats);
+    fullProfile.fanBadge = fanBadgeProgress(fullUser.stats);
+    return fullProfile;
   }
 
-  return user;
+  return profile;
+};
+
+exports.getSecurityInfo = async (userId) => {
+  const user = await User.findById(userId).select('email role kycStatus favoriteTeam preferredSports preferredLeagues stats badges createdAt updatedAt');
+  if (!user) throw new Error('User not found');
+
+  return {
+    email: user.email,
+    role: user.role,
+    kycStatus: user.kycStatus,
+    favoriteTeam: user.favoriteTeam,
+    preferredSports: user.preferredSports,
+    badgeCount: user.badges.length,
+    totalBets: user.stats.totalBets,
+    wins: user.stats.wins,
+    winStreak: user.stats.winStreak,
+    winRate: user.stats.winRate,
+    trustScore: computeTrustScore(user.stats),
+    fanBadge: fanBadgeProgress(user.stats),
+    accountCreatedAt: user.createdAt,
+    accountUpdatedAt: user.updatedAt,
+    supportContact: {
+      email: 'support@duelbet.com',
+      message: 'Visit support for help with account security and verification',
+    },
+  };
 };
 
 /**

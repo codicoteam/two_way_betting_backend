@@ -10,6 +10,15 @@ exports.getProfile = async (req, res, next) => {
   }
 };
 
+exports.getSecurityInfo = async (req, res, next) => {
+  try {
+    const securityInfo = await userService.getSecurityInfo(req.user.id);
+    res.json({ success: true, data: securityInfo });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.updateProfile = async (req, res, next) => {
   try {
     const updated = await userService.updateProfile(req.user.id, req.body);

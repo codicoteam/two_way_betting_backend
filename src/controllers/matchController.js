@@ -1,5 +1,6 @@
 const matchService = require('../services/matchService');
-const Match = require('../models/match');
+const chatService = require('../services/chatService');
+const Bet = require('../models/Bet');
 const User = require('../models/user');
 
 exports.getUpcomingMatches = async (req, res, next) => {
@@ -40,6 +41,31 @@ exports.getMatchById = async (req, res, next) => {
     const match = await matchService.getMatchById(req.params.id);
     if (!match) throw new Error('Match not found');
     res.json({ success: true, data: match });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getMatchOverview = async (req, res, next) => {
+  try {
+    const matchId = req.params.id;
+    const match = await matchService.getMatchById(matchId);
+    if (!match) throw new Error('Match not found');
+
+    const chatMessages = await chatService.getMatchMessages(matchId, 100);
+    const stakes = await Bet.find({ matchId })
+      .populate('createdBy', 'name avatar')
+      .populate('acceptedBy', 'name avatar')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: {
+        match,
+        chatMessages,
+        stakes,
+      },
+    });
   } catch (error) {
     next(error);
   }

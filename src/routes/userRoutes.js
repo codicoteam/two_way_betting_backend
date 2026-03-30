@@ -1,5 +1,5 @@
 const express = require('express');
-const { getProfile, updateProfile } = require('../controllers/userController');
+const { getProfile, updateProfile, getSecurityInfo } = require('../controllers/userController');
 const { protect } = require('../middlewares/authMiddleware');
 const { validateUpdateProfile } = require('../middlewares/validationMiddleware');
 
@@ -40,6 +40,20 @@ const router = express.Router();
  */
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, validateUpdateProfile, updateProfile);
+
+/**
+ * @swagger
+ * /api/users/security:
+ *   get:
+ *     summary: Get security information for the current user
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Security data for the current user
+ */
+router.get('/security', protect, getSecurityInfo);
 
 /**
  * @swagger

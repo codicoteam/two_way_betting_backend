@@ -1,7 +1,9 @@
-const Bet = require('../models/Bet');
+const Bet = require('../models/bet');
 const User = require('../models/user');
+const Match = require('../models/match');
 const walletService = require('./walletService');
 const notificationService = require('./notificationService');
+const oddsService = require('./oddsService');
 const { BET_STATUS, TRANSACTION_TYPE, NOTIFICATION_TYPE } = require('../utils/constants');
 
 const matchBet = async (bet, backerId) => {
@@ -40,6 +42,26 @@ const matchBet = async (bet, backerId) => {
   return bet;
 };
 
+const evaluateBetUnderdog = async (matchId, marketType, creatorPrediction, odds) => {
+  if (marketType !== 'match_winner') return {};
+  const match = await Match.findOne({ matchId });
+  if (!match) return {};
+
+  const comparison = oddsService.compareTeams(match, creatorPrediction);
+  const metadata = {
+    favoriteTeam: comparison.favoriteTeam,
+    isUnderdog: comparison.isUnderdog,
+    strengthRatio: comparison.strengthRatio,
+    underdogSuggestedOdds: comparison.suggestedOdds,
+  };
+
+  if (comparison.isUnderdog && comparison.suggestedOdds && odds < comparison.suggestedOdds) {
+    throw new Error(`The selected team is the underdog; odds must be at least ${comparison.suggestedOdds.toFixed(2)} to reflect team strength.`);
+  }
+
+  return metadata;
+};
+
 /**
  * Create a new bet
  */
@@ -52,12 +74,15 @@ exports.createBet = async (betData, userId) => {
     throw new Error('Insufficient funds');
   }
 
+  const underdogMetadata = await evaluateBetUnderdog(matchId, marketType, creatorPrediction, odds);
+
   const bet = await Bet.create({
     matchId,
     marketType,
     creatorPrediction,
     odds,
     creatorStake,
+    ...underdogMetadata,
     createdBy: userId,
     status: BET_STATUS.OPEN,
     acceptRequests: []

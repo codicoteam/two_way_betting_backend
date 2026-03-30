@@ -43,8 +43,8 @@ const router = express.Router();
  *               - creatorStake
  *             properties:
  *               matchId: { type: string, description: "ID of the match to bet on" }
- *               marketType: { type: string, enum: ["match_result", "goals", "cards"], description: "Type of betting market" }
- *               creatorPrediction: { type: string, description: "Your prediction (e.g., 'home', 'draw', 'away' for match_result)" }
+ *               marketType: { type: string, enum: ["match_winner", "over_under", "btts", "first_goalscorer", "handicap", "exact_goals", "next_goal"], description: "Type of betting market" }
+ *               creatorPrediction: { type: string, description: "Your prediction (e.g., 'home', 'draw', 'away' for match_winner)" }
  *               odds: { type: number, minimum: 1.01, description: "Odds offered (minimum 1.01)" }
  *               creatorStake: { type: number, minimum: 1, description: "Amount you are staking" }
  *     responses:

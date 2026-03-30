@@ -20,6 +20,22 @@ const betSchema = new mongoose.Schema({
     ],
     required: true
   },
+  favoriteTeam: {
+    type: String,
+    enum: ['home', 'away'],
+  },
+  isUnderdog: {
+    type: Boolean,
+    default: false,
+  },
+  strengthRatio: {
+    type: Number,
+    default: null,
+  },
+  underdogSuggestedOdds: {
+    type: Number,
+    default: null,
+  },
   // The prediction chosen by the creator (e.g., "home", "over2.5")
   creatorPrediction: { 
     type: String, 

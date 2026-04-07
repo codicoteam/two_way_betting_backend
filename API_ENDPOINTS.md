@@ -14,8 +14,6 @@ All protected endpoints require a Bearer token in the Authorization header:
 Authorization: Bearer <JWT_TOKEN>
 ```
 
----
-
 ## API Endpoints by Module
 
 ### 1. Authentication Routes (`/auth`)
@@ -272,6 +270,210 @@ npm start
 ```
 3. Confirm the backend is running on `http://localhost:5000`.
 
+---
+
+## Auth API Testing Payloads
+
+### Register (Create new account)
+**Endpoint:** `POST http://localhost:5000/api/auth/register`
+
+**Minimal payload:**
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "SecurePass123!"
+}
+```
+
+**Full payload (with preferences):**
+```json
+{
+  "name": "Jane Smith",
+  "email": "jane@example.com",
+  "password": "StrongPassword456!",
+  "phone": "+263771234567",
+  "preferredSports": ["football", "basketball"],
+  "preferredLeagues": ["Premier League", "NBA"]
+}
+```
+
+**Expected response (201):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "userid123",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+  }
+}
+```
+
+---
+
+### Login (Sign in)
+**Endpoint:** `POST http://localhost:5000/api/auth/login`
+
+**Payload:**
+```json
+{
+  "email": "john@example.com",
+  "password": "SecurePass123!"
+}
+```
+
+**Expected response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "userid123",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+  }
+}
+```
+
+---
+
+### Firebase/Google Sign-in
+**Endpoint:** `POST http://localhost:5000/api/auth/firebase`
+
+**Payload:**
+```json
+{
+  "idToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjEyMzQ1NiJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJzdWIiOiIxMjM0NTY3ODkwIn0..."
+}
+```
+
+**Note:** 
+- Get `idToken` from Firebase Google login on your frontend
+- If Firebase is not configured in `.env`, this will fail gracefully
+
+**Expected response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "userid456",
+    "name": "Google User",
+    "email": "user@gmail.com",
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+  }
+}
+```
+
+---
+
+### Refresh Token (Get new JWT)
+**Endpoint:** `POST http://localhost:5000/api/auth/refresh-token`
+
+**Payload:**
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ..."
+}
+```
+
+**Expected response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+---
+
+### Logout
+**Endpoint:** `POST http://localhost:5000/api/auth/logout`
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Payload:**
+```json
+{}
+```
+
+**Expected response (200):**
+```json
+{
+  "success": true,
+  "message": "Logged out successfully"
+}
+```
+
+---
+
+## Testing Workflow
+
+### Step 1: Register
+1. Copy the **Register** payload above
+2. `POST` to `/api/auth/register`
+3. Save the response `token` and `refreshToken`
+
+### Step 2: Login
+1. Use the same credentials from Step 1
+2. `POST` to `/api/auth/login`
+3. Confirm you get a new `token` and `refreshToken`
+
+### Step 3: Set Bearer Token
+In Postman, go to:
+- **Authorization** tab → Type: **Bearer Token**
+- Paste the `token` value
+
+### Step 4: Refresh Token (Optional)
+1. Use the `refreshToken` from any previous response
+2. `POST` to `/api/auth/refresh-token`
+3. Confirm you get a new JWT `token`
+
+### Step 5: Logout
+1. Use your current Bearer token from Step 3
+2. `POST` to `/api/auth/logout`
+3. Confirm success response
+
+### Step 6: Try Protected Endpoint
+After logout, try `GET /api/users/profile` with your old token — it should fail with 401.
+
+---
+
+## Password Requirements
+
+- **Minimum length:** 6 characters
+- **Recommended:** Mix of uppercase, lowercase, numbers, and special characters (e.g., `"SecurePass123!"`)
+
+---
+
+## Valid Sports for Preferences
+
+```
+football, basketball, tennis, cricket, baseball, hockey, other
+```
+
+---
+
+## Phone Format
+
+- **Pattern:** `+?[0-9]{10,15}` (optional `+` prefix, 10–15 digits)
+- **Examples:**
+  - `+263771234567` ✅
+  - `2263771234567` ✅
+  - `771234567` ❌ (too short)
+
+---
+
 ### 2. Authentication
 
 #### Register
@@ -294,12 +496,9 @@ npm start
   "password": "StrongPassword123"
 }
 ```
-- Copy the `token` from response and set it as header:
-```
-Authorization: Bearer <token>
-```
+---
 
-### 3. Bet endpoints
+### 3. Bet endpoints (continued below)
 
 #### Create a bet
 - URL: `POST http://localhost:5000/api/bets`

@@ -77,7 +77,7 @@ const betSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['OPEN', 'LIVE', 'COMPLETED', 'CANCELLED', 'DISPUTED'],
+    enum: ['OPEN', 'LIVE', 'COMPLETED', 'EARLY_SETTLED', 'CANCELLED', 'DISPUTED'],
     default: 'OPEN'
   },
   winnerId: { 

@@ -1,7 +1,9 @@
 const axios = require('axios');
 const crypto = require('crypto');
 const qs = require('qs');
+const { Paynow } = require('paynow');
 const env = require('../configs/env');
+const paymentsConfig = require('../configs/payments');
 const Transaction = require('../models/Transaction');
 const walletService = require('./walletService');
 const logger = require('../utils/logger');
@@ -65,6 +67,31 @@ exports.initiateDeposit = async (userId, amount, email) => {
   }
 };
 
+exports.initiateWithdrawal = async (user, amount, phone, method = 'ecocash', reference) => {
+  const paynow = new Paynow(
+    paymentsConfig.integrationId,
+    paymentsConfig.integrationKey,
+    paymentsConfig.resultUrl,
+    paymentsConfig.returnUrl
+  );
+
+  const payment = paynow.createPayment(reference, user.email || 'no-reply@duelbet.com');
+  payment.add('Withdrawal payout', amount);
+
+  const response = await paynow.sendMobile(payment, phone, method);
+  if (!response || !response.success) {
+    throw new Error(response?.error || 'Paynow withdrawal initiation failed');
+  }
+
+  return {
+    success: true,
+    pollUrl: response.pollUrl,
+    instructions: response.instructions,
+    status: 'pending',
+    reference,
+  };
+};
+
 /**
  * Handle Paynow result notification (webhook)
  */
@@ -82,6 +109,16 @@ exports.handleWebhook = async (body) => {
   // Find transaction
   const transaction = await Transaction.findOne({ reference });
   if (!transaction) throw new Error('Transaction not found');
+
+  if (transaction.type === 'withdrawal') {
+    if (status === 'Paid') {
+      await walletService.completeWithdrawal(reference, paynowreference);
+    } else {
+      await walletService.failWithdrawal(reference, body.error || status);
+    }
+
+    return { received: true };
+  }
 
   if (status === 'Paid') {
     // Update transaction

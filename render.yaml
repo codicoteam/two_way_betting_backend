@@ -23,14 +23,30 @@ services:
         value: 7d
       - key: FRONTEND_URL
         fromSecret: frontend_url
-      - key: PAYNOW_ID
-        fromSecret: paynow_id
-      - key: PAYNOW_KEY
-        fromSecret: paynow_key
+      - key: PAYNOW_INTEGRATION_ID
+        fromSecret: paynow_integration_id
+      - key: PAYNOW_INTEGRATION_KEY
+        fromSecret: paynow_integration_key
       - key: PAYNOW_RESULT_URL
         fromSecret: paynow_result_url
       - key: PAYNOW_RETURN_URL
         fromSecret: paynow_return_url
+      - key: FIREBASE_PROJECT_ID
+        fromSecret: firebase_project_id
+      - key: FIREBASE_CLIENT_EMAIL
+        fromSecret: firebase_client_email
+      - key: FIREBASE_PRIVATE_KEY
+        fromSecret: firebase_private_key
+      - key: SMTP_HOST
+        fromSecret: smtp_host
+      - key: SMTP_PORT
+        fromSecret: smtp_port
+      - key: SMTP_USER
+        fromSecret: smtp_user
+      - key: SMTP_PASS
+        fromSecret: smtp_pass
+      - key: EMAIL_FROM
+        fromSecret: email_from
       - key: RATE_LIMIT_MAX_REQUESTS
         value: 1000
       - key: RATE_LIMIT_WINDOW_MS

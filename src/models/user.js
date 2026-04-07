@@ -15,7 +15,16 @@ const userSchema = new mongoose.Schema({
   },
   passwordHash: { 
     type: String, 
-    required: true 
+  },
+  firebaseUid: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
+  provider: {
+    type: String,
+    enum: ['password', 'google'],
+    default: 'password',
   },
   phone: { 
     type: String,

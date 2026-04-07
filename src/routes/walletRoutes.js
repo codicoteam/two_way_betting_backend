@@ -50,7 +50,7 @@ router.post('/deposit', protect, validateDeposit, deposit);
  * @swagger
  * /api/wallet/withdraw:
  *   post:
- *     summary: Withdraw money from wallet
+ *     summary: Withdraw money from wallet via Paynow
  *     tags: [Wallet]
  *     security:
  *       - bearerAuth: []
@@ -62,9 +62,11 @@ router.post('/deposit', protect, validateDeposit, deposit);
  *             type: object
  *             properties:
  *               amount: { type: number }
+ *               phone: { type: string }
+ *               method: { type: string, enum: ['ecocash', 'onemoney'] }
  *     responses:
  *       200:
- *         description: Withdrawal successful
+ *         description: Withdrawal initiated and pending Paynow payout
  */
 router.post('/withdraw', protect, validateWithdrawal, withdraw);
 

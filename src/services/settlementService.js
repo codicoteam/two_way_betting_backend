@@ -51,12 +51,13 @@ async function settleBet(bet, matchResult) {
   // Distribute funds
   const loserId = winnerId.toString() === createdBy.toString() ? acceptedBy : createdBy;
 
-  // Winner gets payout
-  await walletService.releaseFunds(winnerId, payout, _id, TRANSACTION_TYPE.BET_WIN);
+  // Winner gets payout and locked stake is released
+  const winnerStake = winnerId.toString() === createdBy.toString() ? bet.creatorStake : bet.backerStake;
+  await walletService.settleLockedFunds(winnerId, winnerStake, payout, _id, TRANSACTION_TYPE.BET_WIN, `Winnings from bet ${_id}`);
 
-  // Loser's locked stake is removed (no addition)
+  // Loser's locked stake is removed without addition
   const loserStake = winnerId.toString() === createdBy.toString() ? bet.backerStake : bet.creatorStake;
-  await walletService.releaseFunds(loserId, loserStake, _id, TRANSACTION_TYPE.BET_RELEASE);
+  await walletService.settleLockedFunds(loserId, loserStake, 0, _id, TRANSACTION_TYPE.BET_RELEASE, `Released losing stake for bet ${_id}`);
 
   // Record commission transaction
   await Transaction.create({

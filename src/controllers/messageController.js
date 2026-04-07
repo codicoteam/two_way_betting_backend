@@ -2,7 +2,8 @@ const messageService = require('../services/messageService');
 
 exports.sendMessage = async (req, res, next) => {
   try {
-    const { toUserId, message } = req.body;
+    const toUserId = req.body.toUserId || req.body.recipientId;
+    const { message } = req.body;
     const msg = await messageService.sendMessage({
       fromUserId: req.user.id,
       toUserId,

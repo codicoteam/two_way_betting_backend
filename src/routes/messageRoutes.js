@@ -24,6 +24,7 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             properties:
+ *               toUserId: { type: string }
  *               recipientId: { type: string }
  *               message: { type: string }
  *     responses:

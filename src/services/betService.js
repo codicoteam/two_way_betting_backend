@@ -1,6 +1,7 @@
 const Bet = require('../models/bet');
 const User = require('../models/user');
 const Match = require('../models/match');
+const Transaction = require('../models/transaction');
 const walletService = require('./walletService');
 const notificationService = require('./notificationService');
 const oddsService = require('./oddsService');
@@ -66,12 +67,24 @@ const evaluateBetUnderdog = async (matchId, marketType, creatorPrediction, odds)
  * Create a new bet
  */
 exports.createBet = async (betData, userId) => {
-  const { matchId, marketType, creatorPrediction, odds, creatorStake } = betData;
+  const { matchId, marketType, creatorPrediction, odds: requestedOdds, creatorStake } = betData;
 
   const user = await User.findById(userId);
   if (!user) throw new Error('User not found');
   if (user.wallet.available < creatorStake) {
     throw new Error('Insufficient funds');
+  }
+
+  let odds = requestedOdds;
+  if (!odds) {
+    const match = await Match.findOne({ matchId });
+    if (!match) throw new Error('Match not found for odds calculation');
+    const oddsSuggestion = oddsService.suggestOdds(match, creatorPrediction);
+    odds = oddsSuggestion.suggestedOdds;
+  }
+
+  if (!oddsService.validateOdds(odds)) {
+    throw new Error('Odds must be between 1.01 and 100');
   }
 
   const underdogMetadata = await evaluateBetUnderdog(matchId, marketType, creatorPrediction, odds);
@@ -213,73 +226,80 @@ exports.respondEarlySettlement = async (betId, userId, accept) => {
     throw new Error('No pending settlement request');
   }
 
-  const opponentId = bet.createdBy.toString() === userId.toString() ? bet.acceptedBy : bet.createdBy;
-  if (bet.earlySettlement.requestedBy.toString() === userId.toString()) {
+  const requesterId = bet.earlySettlement.requestedBy.toString();
+  if (requesterId === userId.toString()) {
     throw new Error('You cannot respond to your own request');
   }
 
+  const opponentId = bet.createdBy.toString() === requesterId ? bet.acceptedBy : bet.createdBy;
+
   if (accept) {
-    // Process early settlement: distribute pot according to proposed amount
     const { proposedAmount } = bet.earlySettlement;
     const totalPot = bet.totalPot;
-    const commission = Math.floor(totalPot * 0.05); // 5% commission
+    const commission = Math.floor(totalPot * 0.05);
     const netPot = totalPot - commission;
+    const requestAmount = Math.max(0, Math.min(netPot, proposedAmount || Math.floor(netPot / 2)));
 
-    // Determine who gets what (simple: requester gets proposedAmount, opponent gets rest)
-    // But we need to ensure the proposed amount is deducted from the opponent's share? Actually,
-    // in a typical early settlement, the user who requests pays the other to cancel. But here both stakes are locked.
-    // A simpler approach: if both agree to split the pot proportionally, we can transfer.
-    // For MVP, we'll just cancel and return stakes minus fee.
-    // We'll implement a basic cancellation: both get their stake back minus commission.
-    // But we can also allow arbitrary splits. We'll keep it simple for now.
+    let creatorReturned = 0;
+    let backerReturned = 0;
+    if (bet.createdBy.toString() === requesterId) {
+      creatorReturned = requestAmount;
+      backerReturned = netPot - requestAmount;
+    } else {
+      backerReturned = requestAmount;
+      creatorReturned = netPot - requestAmount;
+    }
 
-    // For now: cancel bet, return stakes minus commission
-    const creatorRefund = bet.creatorStake - (commission / 2);
-    const backerRefund = bet.backerStake - (commission / 2);
+    await walletService.settleLockedFunds(bet.createdBy, bet.creatorStake, creatorReturned, bet._id, TRANSACTION_TYPE.EARLY_SETTLEMENT, 'Early settlement payout for creator');
+    await walletService.settleLockedFunds(bet.acceptedBy, bet.backerStake, backerReturned, bet._id, TRANSACTION_TYPE.EARLY_SETTLEMENT, 'Early settlement payout for backer');
 
-    // Release funds
-    await walletService.releaseFunds(bet.createdBy, bet.creatorStake, bet._id, TRANSACTION_TYPE.REFUND);
-    await walletService.releaseFunds(bet.acceptedBy, bet.backerStake, bet._id, TRANSACTION_TYPE.REFUND);
+    await Transaction.create({
+      userId: null,
+      type: TRANSACTION_TYPE.COMMISSION,
+      amount: commission,
+      status: 'completed',
+      betId: bet._id,
+      description: `Commission collected for early settlement of bet ${bet._id}`,
+    });
 
-    // Add refund amounts to available (walletService.releaseFunds already does that if type is refund? We'll need to adjust releaseFunds to add for refunds)
-    // Alternatively, we create separate transactions.
-
-    bet.status = BET_STATUS.CANCELLED;
+    bet.status = BET_STATUS.EARLY_SETTLED;
     bet.earlySettlement.status = 'accepted';
     bet.earlySettlement.respondedAt = new Date();
     bet.earlySettlement.acceptedBy = userId;
-    bet.earlySettlement.settledAmount = commission; // or track
+    bet.earlySettlement.settledAmount = requestAmount;
+    bet.earlySettlement.creatorReturned = creatorReturned;
+    bet.earlySettlement.backerReturned = backerReturned;
     await bet.save();
 
-    // Notify both
     await notificationService.create({
       userId: bet.createdBy,
       type: NOTIFICATION_TYPE.EARLY_SETTLEMENT_RESPONSE,
       title: 'Early Settlement Accepted',
-      message: `Bet settled early. Your stake returned minus commission.`,
+      message: `Early settlement accepted. Your final return is $${creatorReturned}.`,
       data: { betId: bet._id },
     });
     await notificationService.create({
       userId: bet.acceptedBy,
       type: NOTIFICATION_TYPE.EARLY_SETTLEMENT_RESPONSE,
       title: 'Early Settlement Accepted',
-      message: `Bet settled early. Your stake returned minus commission.`,
+      message: `Early settlement accepted. Your final return is $${backerReturned}.`,
       data: { betId: bet._id },
     });
-  } else {
-    // Reject
-    bet.earlySettlement.status = 'rejected';
-    bet.earlySettlement.respondedAt = new Date();
-    await bet.save();
 
-    await notificationService.create({
-      userId: bet.earlySettlement.requestedBy,
-      type: NOTIFICATION_TYPE.EARLY_SETTLEMENT_RESPONSE,
-      title: 'Early Settlement Rejected',
-      message: `Your opponent rejected the early settlement request.`,
-      data: { betId: bet._id },
-    });
+    return bet;
   }
+
+  bet.earlySettlement.status = 'rejected';
+  bet.earlySettlement.respondedAt = new Date();
+  await bet.save();
+
+  await notificationService.create({
+    userId: bet.earlySettlement.requestedBy,
+    type: NOTIFICATION_TYPE.EARLY_SETTLEMENT_RESPONSE,
+    title: 'Early Settlement Rejected',
+    message: 'Your early settlement request was rejected. The bet remains live.',
+    data: { betId: bet._id },
+  });
 
   return bet;
 };

@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { jwtSecret, jwtRefreshSecret, jwtExpiresIn, jwtRefreshExpiresIn, bcryptRounds } = require('../configs/auth');
 const { generateReferralCode } = require('../utils/helpers');
+const firebaseService = require('./firebaseService');
 const logger = require('../utils/logger');
 
 /**
@@ -91,6 +92,47 @@ exports.refreshToken = async (refreshToken) => {
   } catch (error) {
     throw new Error('Invalid refresh token');
   }
+};
+
+exports.loginWithFirebase = async ({ idToken }) => {
+  const decodedToken = await firebaseService.verifyIdToken(idToken);
+  const { uid, email, name: displayName, picture } = decodedToken;
+
+  if (!email) {
+    throw new Error('Firebase token is missing an email address');
+  }
+
+  let user = await User.findOne({ firebaseUid: uid });
+  if (!user) {
+    user = await User.findOne({ email });
+  }
+
+  if (user) {
+    if (!user.firebaseUid) {
+      user.firebaseUid = uid;
+      user.provider = 'google';
+      if (!user.avatar && picture) user.avatar = picture;
+      if ((!user.name || user.name.trim() === '') && displayName) user.name = displayName;
+    }
+  } else {
+    user = await User.create({
+      name: displayName || email.split('@')[0],
+      email,
+      avatar: picture || '',
+      firebaseUid: uid,
+      provider: 'google',
+    });
+  }
+
+  const { accessToken, refreshToken } = generateTokens(user._id);
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  return {
+    user: { id: user._id, name: user.name, email: user.email, role: user.role },
+    accessToken,
+    refreshToken,
+  };
 };
 
 /**

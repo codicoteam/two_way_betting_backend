@@ -1,16 +1,46 @@
 const User = require('../models/user');
-const Bet = require('../models/Bet');
+const Bet = require('../models/bet');
+const Match = require('../models/match');
+const notificationService = require('./notificationService');
+const { NOTIFICATION_TYPE } = require('../utils/constants');
 const { winRate } = require('../utils/formatters');
 
-function fanBadgeProgress(stats = {}) {
-  const streak = stats.winStreak || 0;
-  const progress = Math.min(100, Math.round((streak / 10) * 100));
+async function bigFanBadgeProgress(user) {
+  const favoriteTeam = user.favoriteTeam;
+  if (!favoriteTeam) {
+    return {
+      name: 'Big Fan Badge',
+      description: 'Select your favorite team and bet on them 10 times to earn this badge.',
+      earned: false,
+      betCount: 0,
+      requiredBets: 10,
+      progress: 0,
+    };
+  }
+
+  const bets = await Bet.find({ createdBy: user._id }).select('matchId creatorPrediction');
+  const matchIds = bets.map((bet) => bet.matchId);
+  const matches = await Match.find({ matchId: { $in: matchIds } }).select('matchId homeTeam.name awayTeam.name');
+  const matchMap = matches.reduce((map, match) => {
+    map[match.matchId] = match;
+    return map;
+  }, {});
+
+  const count = bets.reduce((total, bet) => {
+    const match = matchMap[bet.matchId];
+    if (!match) return total;
+    if (bet.creatorPrediction === 'home' && match.homeTeam.name === favoriteTeam) return total + 1;
+    if (bet.creatorPrediction === 'away' && match.awayTeam.name === favoriteTeam) return total + 1;
+    return total;
+  }, 0);
+
+  const progress = Math.min(100, Math.round((count / 10) * 100));
   return {
-    name: 'Fan Badge',
-    description: 'Earned after a 10-game winning streak while betting for your team',
-    earned: streak >= 10,
-    consecutiveWins: streak,
-    requiredWins: 10,
+    name: 'Big Fan Badge',
+    description: 'Bet on your favorite team 10 times to earn this badge.',
+    earned: count >= 10,
+    betCount: count,
+    requiredBets: 10,
     progress,
   };
 }
@@ -20,20 +50,22 @@ function fanBadgeProgress(stats = {}) {
  */
 exports.getProfile = async (userId, requesterId) => {
   const user = await User.findById(userId)
-    .select('-passwordHash -refreshToken -wallet.locked -kycStatus')
+    .select('-passwordHash -refreshToken -wallet.locked')
     .populate('badges.badgeId');
 
   if (!user) throw new Error('User not found');
 
   const profile = user.toObject();
-  profile.fanBadge = fanBadgeProgress(user.stats);
+  profile.verified = user.kycStatus === 'verified';
+  delete profile.kycStatus;
+  profile.bigFanBadge = await bigFanBadgeProgress(user);
 
   // If requesting own profile, include wallet and KYC status
   if (requesterId && requesterId.toString() === userId.toString()) {
     const fullUser = await User.findById(userId)
       .select('-passwordHash -refreshToken');
     const fullProfile = fullUser.toObject();
-    fullProfile.fanBadge = fanBadgeProgress(fullUser.stats);
+    fullProfile.bigFanBadge = await bigFanBadgeProgress(fullUser);
     return fullProfile;
   }
 
@@ -55,7 +87,7 @@ exports.getSecurityInfo = async (userId) => {
     wins: user.stats.wins,
     winStreak: user.stats.winStreak,
     winRate: user.stats.winRate,
-    fanBadge: fanBadgeProgress(user.stats),
+    bigFanBadge: await bigFanBadgeProgress(user),
     accountCreatedAt: user.createdAt,
     accountUpdatedAt: user.updatedAt,
     supportContact: {
@@ -92,6 +124,8 @@ exports.updateStats = async (userId, betResult) => {
   const user = await User.findById(userId);
   if (!user) return;
 
+  const oldWins = user.stats.wins;
+
   user.stats.totalBets += 1;
   if (betResult.won) {
     user.stats.wins += 1;
@@ -105,5 +139,36 @@ exports.updateStats = async (userId, betResult) => {
   user.stats.updatedAt = new Date();
 
   await user.save();
+
+  if (betResult.won && betResult.profit >= 50) {
+    await notificationService.create({
+      userId,
+      type: NOTIFICATION_TYPE.SYSTEM_ALERT,
+      title: 'Profit milestone',
+      message: `Nice! You earned $${betResult.profit} profit from this bet.`,
+      data: {},
+    });
+  }
+
+  if (betResult.won && user.stats.winStreak === 5) {
+    await notificationService.create({
+      userId,
+      type: NOTIFICATION_TYPE.SYSTEM_ALERT,
+      title: 'Winning streak!',
+      message: 'You have won 5 matches in a row. Keep the streak going!',
+      data: {},
+    });
+  }
+
+  if (oldWins < 10 && user.stats.wins >= 10) {
+    await notificationService.create({
+      userId,
+      type: NOTIFICATION_TYPE.SYSTEM_ALERT,
+      title: '10 Match Wins',
+      message: 'Congratulations! You have won 10 matches.',
+      data: {},
+    });
+  }
+
   return user.stats;
 };

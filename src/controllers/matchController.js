@@ -1,5 +1,7 @@
 const matchService = require('../services/matchService');
 const chatService = require('../services/chatService');
+const userService = require('../services/userService');
+const oddsService = require('../services/oddsService');
 const Bet = require('../models/Bet');
 const User = require('../models/user');
 
@@ -46,6 +48,43 @@ exports.getMatchById = async (req, res, next) => {
   }
 };
 
+exports.getOddsSuggestion = async (req, res, next) => {
+  try {
+    const match = await matchService.getMatchById(req.params.id);
+    if (!match) throw new Error('Match not found');
+    const prediction = req.query.prediction || null;
+    const odds = await oddsService.suggestOdds(match, prediction);
+    res.json({ success: true, data: odds });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getMatchParticipants = async (matchId, requesterId) => {
+  const stakes = await Bet.find({ matchId })
+    .populate('createdBy', 'name avatar')
+    .populate('acceptedBy', 'name avatar')
+    .sort({ createdAt: -1 });
+
+  const participantIds = new Set();
+  stakes.forEach((bet) => {
+    if (bet.createdBy) participantIds.add(bet.createdBy._id.toString());
+    if (bet.acceptedBy) participantIds.add(bet.acceptedBy._id.toString());
+  });
+
+  const participants = [];
+  for (const participantId of Array.from(participantIds)) {
+    try {
+      const participantProfile = await userService.getProfile(participantId, requesterId);
+      participants.push(participantProfile);
+    } catch (error) {
+      // Ignore missing users
+    }
+  }
+
+  return participants;
+};
+
 exports.getMatchOverview = async (req, res, next) => {
   try {
     const matchId = req.params.id;
@@ -58,13 +97,33 @@ exports.getMatchOverview = async (req, res, next) => {
       .populate('acceptedBy', 'name avatar')
       .sort({ createdAt: -1 });
 
+    const participants = await getMatchParticipants(matchId, req.user?.id);
+
     res.json({
       success: true,
       data: {
         match,
         chatMessages,
         stakes,
+        participants,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getMatchParticipants = async (req, res, next) => {
+  try {
+    const matchId = req.params.id;
+    const match = await matchService.getMatchById(matchId);
+    if (!match) throw new Error('Match not found');
+
+    const participants = await getMatchParticipants(matchId, req.user?.id);
+
+    res.json({
+      success: true,
+      data: { participants },
     });
   } catch (error) {
     next(error);

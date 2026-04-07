@@ -22,7 +22,7 @@ const badgeSchema = new mongoose.Schema({
   criteria: {
     type: { 
       type: String, 
-      enum: ['wins', 'streak', 'bets_on_team', 'profit_amount', 'referrals'],
+      enum: ['bets_on_team'],
       required: true 
     },
     threshold: { type: Number, required: true },

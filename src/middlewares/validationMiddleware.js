@@ -1,6 +1,7 @@
 const {
   registerSchema,
   loginSchema,
+  firebaseAuthSchema,
   createBetSchema,
   acceptBetSchema,
   selectOpponentSchema,
@@ -33,6 +34,7 @@ exports.validateSelectOpponent = validate(selectOpponentSchema);
 exports.validateEarlySettlement = validate(earlySettlementSchema);
 exports.validateDeposit = validate(depositSchema);
 exports.validateWithdrawal = validate(withdrawalSchema);
+exports.validateFirebaseAuth = validate(firebaseAuthSchema);
 exports.validateChatMessage = validate(chatMessageSchema);
 exports.validatePrivateMessage = validate(privateMessageSchema);
 exports.validateUpdateProfile = validate(updateProfileSchema);

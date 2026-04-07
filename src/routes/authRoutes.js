@@ -1,7 +1,7 @@
 const express = require('express');
-const { register, login, refreshToken, logout } = require('../controllers/authController');
+const { register, login, refreshToken, logout, firebaseLogin } = require('../controllers/authController');
 const { protect } = require('../middlewares/authMiddleware');
-const { validateRegister, validateLogin } = require('../middlewares/validationMiddleware');
+const { validateRegister, validateLogin, validateFirebaseAuth } = require('../middlewares/validationMiddleware');
 const { authLimiter } = require('../middlewares/rateLimitMiddleware');
 
 const router = express.Router();
@@ -51,6 +51,26 @@ router.post('/register', authLimiter, validateRegister, register);
  *         description: Login successful, returns JWT token
  */
 router.post('/login', authLimiter, validateLogin, login);
+
+/**
+ * @swagger
+ * /api/auth/firebase:
+ *   post:
+ *     summary: Sign in with Firebase Google authentication
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               idToken: { type: string }
+ *     responses:
+ *       200:
+ *         description: Firebase authentication successful
+ */
+router.post('/firebase', authLimiter, validateFirebaseAuth, firebaseLogin);
 
 /**
  * @swagger

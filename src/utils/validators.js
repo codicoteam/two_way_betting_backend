@@ -17,12 +17,17 @@ const loginSchema = Joi.object({
   password: Joi.string().required(),
 });
 
+// Firebase / Google sign-in
+const firebaseAuthSchema = Joi.object({
+  idToken: Joi.string().required(),
+});
+
 // Create bet
 const createBetSchema = Joi.object({
   matchId: Joi.string().required(),
   marketType: Joi.string().valid(...Object.values(MARKET_TYPE)).required(),
   creatorPrediction: Joi.string().required(),
-  odds: Joi.number().min(1.01).required(),
+  odds: Joi.number().min(1.01).optional(),
   creatorStake: Joi.number().min(1).required(),
 });
 
@@ -48,18 +53,40 @@ const depositSchema = Joi.object({
 // Withdrawal
 const withdrawalSchema = Joi.object({
   amount: Joi.number().min(5).required(),
+  phone: Joi.string().pattern(/^\+?[0-9]{10,15}$/).optional(),
+  method: Joi.string().valid('ecocash', 'onemoney').default('ecocash'),
 });
+
+const betOfferSchema = Joi.object({
+  betId: Joi.string(),
+  marketType: Joi.string().valid(...Object.values(MARKET_TYPE)),
+  creatorPrediction: Joi.string(),
+  odds: Joi.number().min(1.01),
+  creatorStake: Joi.number().min(1),
+  outcome: Joi.string().max(100),
+}).custom((value, helpers) => {
+  if (!value) return value;
+  if (value.betId) return value;
+  const required = ['marketType', 'creatorPrediction', 'odds', 'creatorStake'];
+  const missing = required.filter((field) => value[field] === undefined || value[field] === null);
+  if (missing.length) {
+    return helpers.error('any.custom', { message: `betOffer must include betId or all of: ${required.join(', ')}` });
+  }
+  return value;
+}, 'Bet offer validation');
 
 // Match chat message
 const chatMessageSchema = Joi.object({
-  message: Joi.string().max(500).required(),
-});
+  message: Joi.string().max(500).allow('').optional(),
+  betOffer: betOfferSchema.optional(),
+}).or('message', 'betOffer');
 
 // Private message
 const privateMessageSchema = Joi.object({
-  toUserId: Joi.string().required(),
+  toUserId: Joi.string(),
+  recipientId: Joi.string(),
   message: Joi.string().max(1000).required(),
-});
+}).or('toUserId', 'recipientId');
 
 // Update profile
 const updateProfileSchema = Joi.object({

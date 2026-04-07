@@ -4,6 +4,8 @@ const {
   getLiveMatches,
   getMatchById,
   getMatchOverview,
+  getMatchParticipants,
+  getOddsSuggestion,
   refreshMatches,
 } = require('../controllers/matchController');
 const { protect, optional } = require('../middlewares/authMiddleware');
@@ -53,6 +55,49 @@ router.get('/live', optional, getLiveMatches);
  *         description: Match detail including chat and stakes
  */
 router.get('/:id/overview', optional, getMatchOverview);
+/**
+ * @swagger
+ * /api/matches/{id}/odds-suggestion:
+ *   get:
+ *     summary: Get suggested odds for a match and prediction
+ *     tags: [Matches]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: prediction
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [home, away, draw]
+ *         description: Prediction to calculate suggested odds for
+ *     responses:
+ *       200:
+ *         description: Suggested odds
+ */
+router.get('/:id/odds-suggestion', optional, getOddsSuggestion);
+/**
+ * @swagger
+ * /api/matches/{id}/participants:
+ *   get:
+ *     summary: Get match participant profiles
+ *     tags: [Matches]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: List of participant profiles for the match
+ */
+router.get('/:id/participants', protect, getMatchParticipants);
 
 /**
  * @swagger

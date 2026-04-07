@@ -26,6 +26,59 @@ exports.validateOdds = (odds) => {
   return odds >= 1.01 && odds <= 100;
 };
 
+exports.calculateFavoriteOdds = (favoriteStrength, underdogStrength) => {
+  if (typeof favoriteStrength !== 'number' || typeof underdogStrength !== 'number' || underdogStrength <= 0) {
+    return 1.05;
+  }
+  const ratio = underdogStrength / favoriteStrength;
+  const suggested = 1 + Math.min(0.25, Math.max(0.01, ratio * 0.25));
+  return Math.max(1.01, Math.min(2.0, suggested));
+};
+
+exports.suggestOdds = (match, prediction) => {
+  const homeStrength = exports.getTeamStrength(match.homeTeam?.stats);
+  const awayStrength = exports.getTeamStrength(match.awayTeam?.stats);
+  const homeIsFavorite = homeStrength >= awayStrength;
+  const favoriteStrength = Math.max(homeStrength, awayStrength);
+  const underdogStrength = Math.min(homeStrength, awayStrength);
+  const favoriteTeam = homeIsFavorite ? 'home' : 'away';
+  const underdogTeam = homeIsFavorite ? 'away' : 'home';
+  const homeOdds = homeIsFavorite
+    ? exports.calculateFavoriteOdds(favoriteStrength, underdogStrength)
+    : exports.calculateSuggestedOdds(favoriteStrength, underdogStrength);
+  const awayOdds = homeIsFavorite
+    ? exports.calculateSuggestedOdds(favoriteStrength, underdogStrength)
+    : exports.calculateFavoriteOdds(favoriteStrength, underdogStrength);
+  const result = {
+    homeOdds: Number(homeOdds.toFixed(2)),
+    awayOdds: Number(awayOdds.toFixed(2)),
+    favoriteTeam,
+    underdogTeam,
+    homeStrength,
+    awayStrength,
+    strengthRatio: favoriteStrength / Math.max(underdogStrength, 1),
+  };
+  if (!prediction) {
+    return result;
+  }
+
+  if (prediction === 'draw') {
+    return {
+      ...result,
+      suggestedOdds: 3.0,
+      prediction,
+    };
+  }
+
+  const chosenOdds = prediction === 'home' ? result.homeOdds : result.awayOdds;
+  return {
+    ...result,
+    prediction,
+    suggestedOdds: chosenOdds,
+    isUnderdog: prediction !== 'draw' && prediction !== favoriteTeam,
+  };
+};
+
 /**
  * Calculate a numeric strength score from team stats.
  * Supports different stat fields from external match providers.

@@ -36,3 +36,12 @@ exports.logout = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.firebaseLogin = async (req, res, next) => {
+  try {
+    const result = await authService.loginWithFirebase(req.body);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+};

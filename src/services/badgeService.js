@@ -1,5 +1,33 @@
-const Badge = require('../models/Badge');
+const Badge = require('../models/badge');
 const User = require('../models/user');
+const Bet = require('../models/bet');
+const Match = require('../models/match');
+
+/**
+ * Determine whether a user has placed enough bets on their favorite team.
+ */
+const countFavoriteTeamBets = async (user, criteria) => {
+  const favoriteTeam = criteria.teamId || user.favoriteTeam;
+  if (!favoriteTeam) return 0;
+
+  const bets = await Bet.find({ createdBy: user._id, marketType: 'match_winner' }).select('matchId creatorPrediction');
+  if (!bets.length) return 0;
+
+  const matchIds = bets.map((bet) => bet.matchId);
+  const matches = await Match.find({ matchId: { $in: matchIds } }).select('matchId homeTeam.name awayTeam.name');
+  const matchMap = matches.reduce((map, match) => {
+    map[match.matchId] = match;
+    return map;
+  }, {});
+
+  return bets.reduce((count, bet) => {
+    const match = matchMap[bet.matchId];
+    if (!match) return count;
+    if (bet.creatorPrediction === 'home' && match.homeTeam.name === favoriteTeam) return count + 1;
+    if (bet.creatorPrediction === 'away' && match.awayTeam.name === favoriteTeam) return count + 1;
+    return count;
+  }, 0);
+};
 
 /**
  * Check and award badges for a user based on their stats
@@ -20,27 +48,9 @@ exports.checkAndAwardBadges = async (userId) => {
     const { criteria } = badge;
 
     switch (criteria.type) {
-      case 'wins':
-        if (user.stats.wins >= criteria.threshold) earned = true;
-        break;
-      case 'streak':
-        if (user.stats.winStreak >= criteria.threshold) earned = true;
-        break;
       case 'bets_on_team':
-        // Count bets on a specific team – need to query Bet collection
-        const count = await Bet.countDocuments({
-          createdBy: userId,
-          'resultData.finalOutcome': criteria.teamId, // adjust as needed
-        });
+        const count = await countFavoriteTeamBets(user, criteria);
         if (count >= criteria.threshold) earned = true;
-        break;
-      case 'profit_amount':
-        if (user.stats.profit >= criteria.threshold) earned = true;
-        break;
-      case 'referrals':
-        // Assuming referral model tracks referred users
-        const referredCount = await User.countDocuments({ referredBy: userId });
-        if (referredCount >= criteria.threshold) earned = true;
         break;
       default:
         break;

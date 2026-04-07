@@ -22,7 +22,8 @@ exports.createBadge = async (req, res, next) => {
 exports.getUserBadges = async (req, res, next) => {
   try {
     const { userId } = req.params;
-    const user = await User.findById(userId).populate('badges.badgeId');
+    const 
+    user = await User.findById(userId).populate('badges.badgeId');
     res.json({ success: true, data: user?.badges || [] });
   } catch (error) {
     next(error);

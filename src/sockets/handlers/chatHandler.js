@@ -17,11 +17,12 @@ module.exports = (io, socket) => {
   // Match chat message
   socket.on('matchMessage', async (data) => {
     try {
-      const { matchId, message } = data;
+      const { matchId, message, betOffer } = data;
       const msg = await chatService.postMessage({
         matchId,
         userId: socket.user.id,
         message,
+        betOffer,
       });
       // Broadcast to all in match room
       io.to(`match:${matchId}`).emit('matchMessage', msg);

@@ -47,20 +47,9 @@ const transactionSchema = new mongoose.Schema({
   metadata: {
     type: mongoose.Schema.Types.Mixed,
     default: {}
-  },
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
-  },
-  updatedAt: { 
-    type: Date, 
-    default: Date.now 
   }
-});
-
-transactionSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
+}, {
+  timestamps: true  // This automatically adds createdAt and updatedAt fields
 });
 
 module.exports = mongoose.models.Transaction || mongoose.model('Transaction', transactionSchema);

@@ -90,6 +90,10 @@ async function settleBet(bet, matchResult) {
     message: `Your bet has been settled. You lost $${loserStake}.`,
     data: { betId: _id, loss: loserStake, winner: false },
   });
+
+  // Update match bet count after settlement
+  const Match = require('../models/Match');
+  await Match.findOneAndUpdate({ matchId: bet.matchId }, { $inc: { betCount: -1 } });
 }
 
 /**

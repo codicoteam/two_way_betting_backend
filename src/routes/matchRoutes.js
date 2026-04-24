@@ -7,6 +7,7 @@ const {
   getMatchParticipants,
   getOddsSuggestion,
   refreshMatches,
+  getMatchBetCount,
 } = require('../controllers/matchController');
 const { protect, optional } = require('../middlewares/authMiddleware');
 const { adminOnly } = require('../middlewares/adminMiddleware');
@@ -80,6 +81,39 @@ router.get('/:id/overview', optional, getMatchOverview);
  *         description: Suggested odds
  */
 router.get('/:id/odds-suggestion', optional, getOddsSuggestion);
+
+/**
+ * @swagger
+ * /api/matches/{id}/bet-count:
+ *   get:
+ *     summary: Get bet count for a match
+ *     tags: [Matches]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *         description: Match ID
+ *     responses:
+ *       200:
+ *         description: Number of active bets on the match
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     matchId:
+ *                       type: string
+ *                     betCount:
+ *                       type: number
+ */
+router.get('/:id/bet-count', optional, getMatchBetCount);
+
 /**
  * @swagger
  * /api/matches/{id}/participants:

@@ -75,6 +75,23 @@ exports.getMatchById = async (matchId) => {
 };
 
 /**
+ * Update bet count for a match
+ */
+exports.updateBetCount = async (matchId) => {
+  const count = await Bet.countDocuments({ matchId, status: { $ne: 'CANCELLED' } });
+  await Match.findOneAndUpdate({ matchId }, { betCount: count });
+  return count;
+};
+
+/**
+ * Get bet count for a match
+ */
+exports.getBetCount = async (matchId) => {
+  const match = await Match.findOne({ matchId }).select('betCount');
+  return match?.betCount || 0;
+};
+
+/**
  * Update match status and scores (called by background job)
  */
 exports.updateMatch = async (matchId, apiData) => {

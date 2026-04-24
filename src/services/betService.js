@@ -24,6 +24,9 @@ const matchBet = async (bet, backerId) => {
   // Lock backer's stake
   await walletService.lockFunds(backerId, backerStake, bet._id);
 
+  // Update match bet count (bet is now matched, count stays the same)
+  await Match.findOneAndUpdate({ matchId: bet.matchId }, { $inc: { betCount: 0 } });
+
   // Notify users
   await notificationService.create({
     userId: bet.createdBy,
@@ -102,6 +105,9 @@ exports.createBet = async (betData, userId) => {
   });
 
   await walletService.lockFunds(userId, creatorStake, bet._id);
+
+  // Update match bet count
+  await Match.findOneAndUpdate({ matchId }, { $inc: { betCount: 1 } });
 
   await notificationService.create({
     userId,

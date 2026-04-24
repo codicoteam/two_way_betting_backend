@@ -78,6 +78,11 @@ const matchSchema = new mongoose.Schema({
     type: Date, 
     default: Date.now 
   },
+  // Bet count for the match (updated via aggregation)
+  betCount: {
+    type: Number,
+    default: 0
+  },
   createdAt: { 
     type: Date, 
     default: Date.now 

@@ -60,6 +60,17 @@ exports.getOddsSuggestion = async (req, res, next) => {
   }
 };
 
+exports.getMatchBetCount = async (req, res, next) => {
+  try {
+    const match = await matchService.getMatchById(req.params.id);
+    if (!match) throw new Error('Match not found');
+    const count = await matchService.getBetCount(req.params.id);
+    res.json({ success: true, data: { matchId: req.params.id, betCount: count } });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getMatchParticipants = async (matchId, requesterId) => {
   const stakes = await Bet.find({ matchId })
     .populate('createdBy', 'name avatar')

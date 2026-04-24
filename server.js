@@ -12,6 +12,11 @@ try { swaggerSpecs = require('./src/configs/swagger'); } catch { swaggerSpecs = 
 const app = express();
 const server = http.createServer(app);
 
+// Health check endpoint for Render
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Connect to DB
 connectDB();
 
@@ -50,6 +55,10 @@ try {
 } catch (err) {
   console.warn('Socket init failed:', err.message);
 }
+
+// Error handling middleware (must be after all routes)
+const errorHandler = require('./src/middlewares/errorMiddleware');
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

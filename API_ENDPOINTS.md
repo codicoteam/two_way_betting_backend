@@ -87,6 +87,7 @@ Authorization: Bearer <JWT_TOKEN>
 | GET | `/matches/:id` | Get match by ID | No |
 | GET | `/matches/:id/overview` | Get match overview with chat & stakes | No |
 | GET | `/matches/:id/odds-suggestion` | Get suggested odds for a match and prediction | No |
+| GET | `/matches/:id/bet-count` | Get bet count for a match | No |
 | GET | `/matches/:id/participants` | Get match participants/bets | Yes |
 | POST | `/matches/refresh` | Refresh match data (admin) | Yes (Admin) |
 

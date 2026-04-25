@@ -1,6 +1,6 @@
 const User = require('../models/user');
 const Bet = require('../models/bet');
-const Match = require('../models/Match');
+const Match = require('../models/match');
 const Kyc = require('../models/Kyc');
 const { USER_ROLE, BET_STATUS } = require('../utils/constants');
 

@@ -1,4 +1,4 @@
-const Match = require('../models/Match');
+const Match = require('../models/match');
 const Bet = require('../models/bet');
 const notificationService = require('./notificationService');
 const { NOTIFICATION_TYPE } = require('../utils/constants');

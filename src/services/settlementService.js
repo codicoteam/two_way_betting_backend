@@ -92,7 +92,7 @@ async function settleBet(bet, matchResult) {
   });
 
   // Update match bet count after settlement
-  const Match = require('../models/Match');
+  const Match = require('../models/match');
   await Match.findOneAndUpdate({ matchId: bet.matchId }, { $inc: { betCount: -1 } });
 }
 

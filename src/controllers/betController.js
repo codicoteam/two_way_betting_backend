@@ -1,5 +1,5 @@
 const betService = require('../services/betService');
-const Bet = require('../models/Bet');
+const Bet = require('../models/bet');
 
 exports.createBet = async (req, res, next) => {
   try {

@@ -1,5 +1,5 @@
 const { getQueue } = require('./queue');
-const Bet = require('../models/Bet');
+const Bet = require('../models/bet');
 const matchService = require('../services/matchService');
 const settlementService = require('../services/settlementService');
 const logger = require('../utils/logger');

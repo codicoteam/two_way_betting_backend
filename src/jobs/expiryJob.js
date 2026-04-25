@@ -1,5 +1,5 @@
 const { getQueue } = require('./queue');
-const Bet = require('../models/Bet');
+const Bet = require('../models/bet');
 const logger = require('../utils/logger');
 
 const expiryQueue = getQueue('expiryQueue');

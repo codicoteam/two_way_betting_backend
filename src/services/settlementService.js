@@ -1,4 +1,4 @@
-const Bet = require('../models/Bet');
+const Bet = require('../models/bet');
 const Transaction = require('../models/transaction');
 const walletService = require('./walletService');
 const userService = require('./userService');

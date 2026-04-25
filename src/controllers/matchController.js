@@ -2,7 +2,7 @@ const matchService = require('../services/matchService');
 const chatService = require('../services/chatService');
 const userService = require('../services/userService');
 const oddsService = require('../services/oddsService');
-const Bet = require('../models/Bet');
+const Bet = require('../models/bet');
 const User = require('../models/user');
 
 exports.getUpcomingMatches = async (req, res, next) => {

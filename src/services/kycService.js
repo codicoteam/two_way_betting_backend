@@ -1,4 +1,4 @@
-const Kyc = require('../models/Kyc');
+const Kyc = require('../models/kyc');
 const User = require('../models/user');
 const { KYC_STATUS } = require('../utils/constants');
 const notificationService = require('./notificationService');

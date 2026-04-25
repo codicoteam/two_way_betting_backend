@@ -1,5 +1,5 @@
 const Bet = require('../models/Bet');
-const Transaction = require('../models/Transaction');
+const Transaction = require('../models/transaction');
 const walletService = require('./walletService');
 const userService = require('./userService');
 const notificationService = require('./notificationService');

@@ -4,7 +4,7 @@ const qs = require('qs');
 const { Paynow } = require('paynow');
 const env = require('../configs/env');
 const paymentsConfig = require('../configs/payments');
-const Transaction = require('../models/Transaction');
+const Transaction = require('../models/transaction');
 const walletService = require('./walletService');
 const logger = require('../utils/logger');
 

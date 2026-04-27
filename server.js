@@ -12,9 +12,18 @@ try { swaggerSpecs = require('./src/configs/swagger'); } catch { swaggerSpecs = 
 const app = express();
 const server = http.createServer(app);
 
+
 // Health check endpoint for Render
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Root route for API status
+app.get('/', (req, res) => {
+  res.json({
+    status: 'OK',
+    message: 'DuelBet API is running'
+  });
 });
 
 // Connect to DB
